@@ -363,7 +363,7 @@ public class TextFileBufferedWrapper implements Disposable {
 	 * @return
 	 */
 	public long getFileSize() {
-		return mFileSize;
+		return mSrcFile.length(); 				// @strelchm
 	}
 
 	/**

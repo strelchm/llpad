@@ -107,6 +107,7 @@ public class TaBuilder implements Disposable {
 
 			@Override
 			public void keyPressed(KeyEvent e) {
+				System.out.println("KEY = " + e.getKeyChar());
 
 				final int caretIndex = mTextArea.getCaretIndex();
 				final int caretRowIndex = mTextArea.getRowIndexAt(caretIndex);

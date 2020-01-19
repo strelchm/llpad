@@ -23,12 +23,16 @@
  */
 package org.riversun.llpad.ui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.*;
 import javax.swing.text.PlainDocument;
 
 import org.riversun.llpad.AppDef;
+import org.riversun.llpad.AppMain;
 import org.riversun.llpad.fw.Disposable;
 import org.riversun.llpad.ui.GUIBuilder.GuiComponent;
 import org.riversun.llpad.ui.TaBuilder.CaretDir;
@@ -98,6 +102,8 @@ public class TaViewRangeManager implements JTextAreaEventListener, ViewRangeEven
 	private long mPrevCursorAddr = -1;
 
 	private static final int EXPECTED_AVERAGE_LENGTH_OF_ONE_LINE = 80;
+
+	private Timer timer;
 
 	/**
 	 * 
@@ -224,6 +230,10 @@ public class TaViewRangeManager implements JTextAreaEventListener, ViewRangeEven
 
 			}
 		});
+
+		setEndFileCursorPosition();
+
+		addUpdateViewListener();
 	}
 
 	public long getCursorAddressOfCurrentCaret() {
@@ -459,5 +469,55 @@ public class TaViewRangeManager implements JTextAreaEventListener, ViewRangeEven
 	public void dispose() {
 		mFileWrapper.dispose();
 		mViewRange.dispose();
+	}
+
+	/**
+	 * Курсор в конец файла
+	 */
+	private void setEndFileCursorPosition() {
+		mViewRange.seek(true, mViewRange.getFileEndAddress());
+		mViews.verticalSeekBar.setLongValue(mViewRange.getFileEndAddress());
+	}
+
+	private void addUpdateViewListener() {
+		timer = new Timer(3000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("___ " + mViews.textArea.getRowIndexAt(mViews.textArea.getCaretIndex()));
+				System.out.println("**** " + mViews.verticalSeekBar.getExtent());
+
+//                if (mViews.verticalSeekBar.getExtent() <= 1) {
+//                    timer.stop();
+//                    appMain.openFile(AppMain.getGui(), AppMain.getFile(), 0);
+//                }
+//                else
+				if (isEndOfFile()) {
+					System.out.println("TO END");
+					setEndFileCursorPosition();
+				}
+			}
+		});
+
+		timer.start();
+	}
+
+	public boolean isEndOfFile() {
+		final int caretIndex = mViews.textArea.getCaretIndex();
+
+		final int viewStartIndex = mViewRange.getViewStartIndex();
+		final int viewEndIndex = mViewRange.getViewEndIndex();
+
+		final int cursorIndex = caretIndex + viewStartIndex;
+//        int caretIndex = mViews.textArea.getLastCaretIndexOfCurrentVisible();
+//        int viewStartIndex = mViewRange.getViewStartIndex();
+//        int cursorIndex = caretIndex + viewStartIndex;
+//
+//        boolean isCursorPlacedInViewEnd = (cursorIndex == mViewRange.getViewEndAddress() + 1) || (cursorIndex == mViewRange.getViewEndAddress() + 1);
+		final boolean isViewShowingTheEndOfTheFile = mViewRange.isViewShowingTheEndOfTheFile();
+
+		// Whether or not the caret is at the last position of the view
+		final boolean isCursorPlacedInViewEnd = cursorIndex >= viewEndIndex;
+
+		return mViewRange.isViewShowingTheEndOfTheFile() && isCursorPlacedInViewEnd;
 	}
 }
